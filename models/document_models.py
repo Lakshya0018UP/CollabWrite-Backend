@@ -44,7 +44,7 @@ class documentCreate(BaseModel):
     title:str
 
 class Documents(BaseModel):
-    id:PyObjectId=Field(PyObjectId = Field(default_factory=PyObjectId, alias="_id")),
+    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id"),
     title:str
     collaborators:List[str]=[]
     content:Optional[dict]={}
