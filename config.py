@@ -15,4 +15,5 @@ client=AsyncIOMotorClient(uri)
 db=client.collabWrite_data
 user=db["data"]
 documents=db["documents"]
+invitations=db["invitations"]
 

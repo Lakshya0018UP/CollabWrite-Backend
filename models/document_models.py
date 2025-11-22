@@ -4,6 +4,7 @@ from datetime import datetime
 from bson import ObjectId
 from pydantic_core import core_schema
 from pydantic.json_schema import JsonSchemaValue
+from models.role_models import Role
 
 class PyObjectId(ObjectId):
     @classmethod
@@ -44,14 +45,22 @@ class documentCreate(BaseModel):
     title:str
 
 class Documents(BaseModel):
-    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id"),
+    id: str
     title:str
     collaborators:List[str]=[]
     content:Optional[dict]={}
-    owner_id:PyObjectId
+    owner_id:str
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
+
+class Collaborators(BaseModel):
+    user_id:str
+    role:Role=Role.VIEWER
     class Config:
         populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
+
+class InviteRequest(BaseModel):
+    doc_id:str
+    invitee_mail:str

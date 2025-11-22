@@ -2,13 +2,13 @@ from fastapi import APIRouter,Depends,HTTPException,status,Response
 
 from datetime import datetime
 from utilis.auth_logic import password_hash,check_hash_password
-from services.user_service import get_user,get_user_details
+from services.user_service import get_user_details
 from models.user_models import Signup
 from config import user
 from utilis.jwt_utilis import create_jwt_token,get_current_user
 from models.role_models import UserDetails
 from bson import ObjectId
-
+import uuid
 router=APIRouter(
     prefix="/api/auth",
     tags=["auth_routes"]
@@ -17,15 +17,16 @@ router=APIRouter(
 
 @router.post("/signup")
 async def signup_user(userdata:Signup):
-    exisiting_user=await get_user(userdata.email)
+    exisiting_user=await get_user_details(userdata.email)
 
     if exisiting_user:
         raise HTTPException(status_code=400,detail='USER ALREADY EXISTS')
     
     hashed_password=password_hash(userdata.password)
-
-    new_user={"email":userdata.email,"password":hashed_password,"Date_of_ID_creation":datetime.now()}
+    new_uid=str(uuid.uuid4())
+    new_user={"email":userdata.email,"password":hashed_password,"Date_of_ID_creation":datetime.now(),"id":new_uid}
     result=await user.insert_one(new_user)
+    
 
     return {
         "id":str(result.inserted_id)
@@ -39,7 +40,7 @@ async def login_user(userdata:Signup):
         raise HTTPException(status_code=404,detail="Incorrect Details")
     payload={
         "email":registered_user["email"],
-        "id":str(registered_user["_id"])
+        "id":str(registered_user["id"])
         }
     token=create_jwt_token(payload)
 
@@ -59,7 +60,7 @@ async def add_info(Userdetails:UserDetails,current_user:str=Depends(get_current_
         raise HTTPException(status_code=404,detail="User Not found")
     
     User_data_update=Userdetails.dict()
-    await user.update_one({"_id":ObjectId(current_user_id)},{
+    await user.update_one({"id":current_user_id},{
         "$set":{"userdata":User_data_update}
     })
     return {"message":"User data updated successfully"}
