@@ -10,7 +10,7 @@ from utilis.jwt_utilis import create_jwt_token,get_current_user
 from models.role_models import UserDetails,Role
 from bson import ObjectId
 from typing import List
-from models.document_models import Documents,documentCreate,Collaborators,InviteRequest
+from models.document_models import Documents,documentCreate,Collaborators,InviteRequest,DocUpdate
 import secrets
 import uuid
 from utilis.email_utilis import send_invite_email_exisiting,send_new_user_invite_link
@@ -177,6 +177,40 @@ async def accept_new(token=Body(...,embed=True),existing_user_uid=Body(...,embed
     await invitations.delete_one({"token": token})
 
     return {"message": "Invitation accepted successfully!"}
+
+
+@router.put("/{doc_id}/update")
+async def update_doc(doc_id:str,DocUpdate:DocUpdate,current_user:dict=Depends(get_current_user)):
+    doc=await documents.find_one({"id":doc_id})
+
+    if not doc:
+        raise HTTPException(status_code=404,detail="Doc doesn't exist")
+    
+    #if doc is found, then check for permissions as only collabortors and owners can edit
+
+    is_owner=doc["owner_id"]==current_user["id"]
+
+    is_editor=False
+    if "collaborators" in doc:
+        for collaboarotor in doc["collaborators"]:
+            if collaboarotor["new_user_id"]==current_user["id"] and collaboarotor["role"]=="editor":
+                is_editor=True
+                break
+
+    if not is_owner and not is_editor:
+        raise HTTPException(status_code=403,detail="Forbidden")
+    
+    await documents.update_one({"id":doc_id}, #This Paticular doc id has to be updated
+                   {
+                       "$set":{
+                           "content":DocUpdate.content,
+                           "updated_at":datetime.now()
+                       }
+                   })
+
+    return {"message":"Doc Updated Succesfully"}
+
+
 
 
 

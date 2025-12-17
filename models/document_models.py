@@ -66,3 +66,7 @@ class InviteRequest(BaseModel):
     doc_id:str
     invitee_mail:str
     role:Role=Role.EDITOR
+
+class DocUpdate(BaseModel):
+    content:Any
+    updated_at:datetime=Field(default_factory=datetime.now)
