@@ -56,6 +56,7 @@ class Documents(BaseModel):
 class Collaborators(BaseModel):
     user_id:str
     role:Role=Role.VIEWER
+    user_email:str
     class Config:
         populate_by_name = True
         arbitrary_types_allowed = True
@@ -64,3 +65,4 @@ class Collaborators(BaseModel):
 class InviteRequest(BaseModel):
     doc_id:str
     invitee_mail:str
+    role:Role=Role.EDITOR
